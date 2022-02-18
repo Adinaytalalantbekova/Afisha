@@ -12,6 +12,13 @@ def director(request):
     data = MovieAppSerializer(directors, many=True).data
     return Response(data=data)
 
+
+@property
+def moviews_count(self):
+    ids = self.get_descentdants(inclaude_self=True).values_list('id')
+    return Director.objects.filter(parent_id__in=ids).count()
+
+
 @api_view(['GET'])
 def director_detail(request, id):
     try:
@@ -47,6 +54,7 @@ def review(request):
     reviews = Review.objects.all()
     data = MovieAppSerializer(reviews, many=True)
     return Response(data=data)
+
 
 @api_view(['GET'])
 def review_detail(request, id):
