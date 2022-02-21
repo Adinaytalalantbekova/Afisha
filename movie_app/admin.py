@@ -1,7 +1,6 @@
 from django.contrib import admin
-from movie_app.models import Director
-from movie_app.models import Movie
-from movie_app.models import Review
+from movie_app.models import Director, Movie, Review
+
 
 admin.site.register(Director)
 admin.site.register(Movie)
