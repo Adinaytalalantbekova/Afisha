@@ -1,19 +1,26 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from movie_app.serializers import MovieSerializer
+from movie_app.serializers import MovieSerializer, DirectorSerializer, MovieCreateUpdateSerializer, ReviewSerializer
 from movie_app.models import Director, Movie, Review
 from rest_framework import status
+from . import serializers
 
 
 @api_view(['GET', 'POST'])
 def director(request):
     if request.method == 'GET':
         directors = Director.objects.all()
-        data = MovieSerializer(directors, many=True).data
+        data = DirectorSerializer(directors, many=True).data
         return Response(data=data)
     elif request.method == 'POST':
-        print(request.data)
-        return Response(data={'massage': 'Data Received!'})
+        serializer = serializers.DirectorCreateUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'error': serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            name = request.data.get('name')
+            director = Director.objects.create(name=name)
+            return Response(data=DirectorSerializer(director).data,
+                            status=status.HTTP_201_CREATED)
 
 
 @property
@@ -35,17 +42,36 @@ def director_detail(request, id):
         directors.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     elif request.method == 'PUT':
-        directors.name = request.data.get('name')
-        directors.seve()
-        return Response(data=MovieSerializer(directors).data)
+        serializer = serializers.DirectorCreateUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'error': serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            directors.name = request.data.get('name')
+            directors.seve()
+            return Response(data=MovieSerializer(directors).data)
 
 
-
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def movie(request):
-    movies = Movie.objects.all()
-    data = MovieSerializer(movies, many=True)
-    return Response(data=data)
+    if request.method == 'GET':
+        movies = Movie.objects.all()
+        data = MovieSerializer(movies, many=True)
+        return Response(data=data)
+    elif request.method == 'POST':
+        serializer = serializers.MovieCreateUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'error': serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            title = request.data.get('title')
+            description = request.data.get('description')
+            duration = request.data.get('duration')
+            director = request.data.get('director')
+            movies = Movie.objects.create(title=title, description=description,
+                                          duration=duration, director_id=director)
+            return Response(data=MovieSerializer(movies).data,
+                            status=status.HTTP_201_CREATED)
+
+
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -62,23 +88,38 @@ def movie_detail(request, id):
         movies.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     elif request.method == 'PUT':
-        movies.title = request.data.get('title')
-        movies.description = request.data.get('description')
-        movies.duration = request.data.get('duration')
-        movies.director = request.data.get('director')
-        movies.seve()
-        return Response(data=MovieSerializer(movies).data)
+        serializer = serializers.MovieCreateUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'error': serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            movies.title = request.data.get('title')
+            movies.description = request.data.get('description')
+            movies.duration = request.data.get('duration')
+            movies.director = request.data.get('director')
+            movies.seve()
+            return Response(data=MovieSerializer(movies).data)
 
 
-
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def review(request):
-    reviews = Review.objects.all()
-    data = MovieSerializer(reviews, many=True)
-    return Response(data=data)
+    if request.method == 'GET':
+        reviews = Review.objects.all()
+        data = MovieSerializer(reviews, many=True)
+        return Response(data=data)
+    elif request.method == 'POST':
+        serializer = serializers.ReviewCreateSerialiser(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'error': serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            text = request.data.get('text')
+            stars = request.data.get('stars')
+            reviews = Review.objects.create(text=text, stars=stars)
+            return Response(data=ReviewSerializer(reviews).data,
+                            status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET'])
+
+@api_view(['GET', 'PUT', 'POST'])
 def review_detail(request, id):
     try:
         reviews = Review.objects.get(id=id)
@@ -92,10 +133,14 @@ def review_detail(request, id):
         reviews.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     elif request.method == 'PUT':
-        reviews.stars = request.data.get('stars')
-        reviews.text = request.data.get('text')
-        reviews.movie = request.data.get('movie')
-        reviews.seve()
-        return Response(data=MovieSerializer(reviews).data)
+        serializer = serializers.ReviewCreateSerialiser(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'error': serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            reviews.stars = request.data.get('stars')
+            reviews.text = request.data.get('text')
+            reviews.movie = request.data.get('movie')
+            reviews.seve()
+            return Response(data=MovieSerializer(reviews).data)
 
 

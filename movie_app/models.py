@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Avg
 
@@ -28,12 +29,24 @@ class Movie(models.Model):
 
 
 class Review(models.Model):
-    stars = models.IntegerField(default=5)
     text = models.TextField()
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    stars = models.PositiveIntegerField(default=0,validators=[
+        MinValueValidator(1),
+        MaxValueValidator(5)
+    ],null=True)
+
 
     def __str__(self):
         return self.movie.title
+
+    @property
+    def rating(self):
+        reviews = Review.objects.filter(title=self)
+        sum_ = 0
+        for i in reviews:
+            sum_ += i.stars
+        return sum_ / reviews.count()
 
 
 
