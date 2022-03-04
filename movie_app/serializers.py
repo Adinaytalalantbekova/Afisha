@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from movie_app.models import Director, Review, Movie
+from . import models
+from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
 
 
@@ -11,7 +13,6 @@ class DirectorSerializer(serializers.ModelSerializer):
 
 class DirectorCreateUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
-
 
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -33,6 +34,10 @@ class MovieSerializer(serializers.ModelSerializer):
                                                             product=movie_app), many=True)
         return serialiser.data
 
+    def validate_director_id(self, attrs):
+        if models.Director.objects.filter(id=attrs).count == 0:
+            raise ValidationError(f'message:{attrs} not found')
+
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -41,7 +46,11 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class ReviewCreateSerialiser(serializers.Serializer):
     stars = serializers.IntegerField(min_value=1, max_value=5)
-    text = serializers.CharField(max_length=50)
+    text = serializers.CharField()
+
+    def validate_movie_id(self, movie_id):
+        if models.Movie.objects.filter(id=movie_id).count == 0:
+            raise ValidationError(f'message: movie id not found')
 
 
 class MovieCreateUpdateSerializer(serializers.Serializer):
@@ -56,4 +65,24 @@ class MovieCreateUpdateSerializer(serializers.Serializer):
         return movies
 
 
+class UserCreateSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+
+    def validate_username(self,username):
+        if User.objects.filter(username=username):
+            raise ValidationError('user with this username is already exists')
+        return username
+
+
+
+
+class UserAuthorizationSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate_token(self,token):
+        if User.objects.filter(token=token):
+            raise ValidationError('this user is already logged in')
 
